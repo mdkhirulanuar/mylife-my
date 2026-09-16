@@ -1,0 +1,28 @@
+name: Prototype smoke test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [prototype/v0.1]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run smoke test
+        run: npm run test:smoke
