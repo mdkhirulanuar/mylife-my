@@ -32,13 +32,13 @@ test('core MyLife prototype journey persists data', async ({ page }) => {
   await page.locator('#itemForm button[type="submit"]').click();
 
   await expect(page.locator('#timeline')).toBeVisible();
-  await expect(page.getByText('Smoke Test Item')).toBeVisible();
+  await expect(page.locator('#items').getByText('Smoke Test Item', { exact: true })).toBeVisible();
 
   await page.locator('[data-view="upcoming"]').click();
   await expect(page.locator('#upcoming')).toBeVisible();
-  await expect(page.getByText('Smoke Test Item')).toBeVisible();
+  await expect(page.locator('#alerts').getByText(/Smoke Test Item/)).toBeVisible();
 
   await page.reload();
   await expect(page.locator('#timeline')).toBeVisible();
-  await expect(page.getByText('Smoke Test Item')).toBeVisible();
+  await expect(page.locator('#items').getByText('Smoke Test Item', { exact: true })).toBeVisible();
 });
