@@ -10,10 +10,10 @@ test('core MyLife prototype journey persists data', async ({ page }) => {
   await page.locator('#start').click();
 
   await expect(page.locator('#timeline')).toBeVisible();
-  await expect(page.locator('#timeline-list .item')).toHaveCount(1);
+  await expect(page.locator('#items .item')).toHaveCount(1);
 
-  await page.locator('#add').click();
-  await expect(page.locator('#add-screen')).toBeVisible();
+  await page.locator('#addBtn').click();
+  await expect(page.locator('#add')).toBeVisible();
 
   await page.locator('#name').fill('Smoke Test Item');
   await page.locator('#category').selectOption({ label: 'Vehicle' });
@@ -29,15 +29,16 @@ test('core MyLife prototype journey persists data', async ({ page }) => {
   await page.locator('#date').fill(dueDate);
   await page.locator('#amount').fill('123.45');
   await page.locator('#reminder').selectOption('30');
-  await page.locator('#item-form button[type="submit"]').click();
+  await page.locator('#itemForm button[type="submit"]').click();
 
   await expect(page.locator('#timeline')).toBeVisible();
   await expect(page.getByText('Smoke Test Item')).toBeVisible();
 
-  await page.locator('#upcoming-nav').click();
+  await page.locator('[data-view="upcoming"]').click();
   await expect(page.locator('#upcoming')).toBeVisible();
   await expect(page.getByText('Smoke Test Item')).toBeVisible();
 
   await page.reload();
+  await expect(page.locator('#timeline')).toBeVisible();
   await expect(page.getByText('Smoke Test Item')).toBeVisible();
 });
