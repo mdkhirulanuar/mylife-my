@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyLife MY — Prototype 0.1</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="app">
+<header><div><span class="brand">MyLife MY</span><small>Prototype 0.1 · data stays in this browser</small></div><button id="reset" class="ghost">Reset</button></header>
+<section id="onboarding" class="screen active">
+<div class="hero"><span class="eyebrow">YOUR PERSONAL LIFE ADMIN</span><h1>Never miss what matters.</h1><p>Keep renewals, bills, servicing and warranties on one simple timeline.</p></div>
+<h2>What should MyLife remember?</h2><p class="muted">Pick a few. You can change these later.</p>
+<div id="templates" class="chips"></div><button id="start" class="primary">Build my timeline</button>
+</section>
+<section id="timeline" class="screen">
+<div class="summary"><span>Next 90 days</span><strong id="count">0 items</strong><small id="cost">RM0 expected</small></div>
+<div class="section-title"><h2>Life Timeline</h2><button id="addBtn" class="primary compact">+ Add</button></div><div id="items"></div>
+<nav><button data-view="timeline" class="nav-active">Timeline</button><button data-view="upcoming">Upcoming</button></nav>
+</section>
+<section id="upcoming" class="screen"><div class="section-title"><h2>Upcoming</h2><button data-view="timeline" class="ghost">Timeline</button></div><div id="alerts"></div></section>
+<section id="add" class="screen"><div class="section-title"><h2>Add Life Item</h2><button data-view="timeline" class="ghost">Cancel</button></div>
+<form id="itemForm"><label>Name<input id="name" required placeholder="e.g. Myvi road tax"></label><label>Category<select id="category"><option>Vehicle</option><option>Home</option><option>Bills</option><option>Subscription</option><option>Warranty</option><option>Personal</option><option>Insurance</option><option>Other</option></select></label><label>Due / expiry date<input id="date" type="date" required></label><label>Expected cost (RM)<input id="amount" type="number" min="0" step="0.01" placeholder="Optional"></label><label>Repeat<select id="repeat"><option value="none">Does not repeat</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label><label>Remind me<select id="reminder"><option value="30">30 days before</option><option value="14">14 days before</option><option value="7">7 days before</option><option value="1">1 day before</option></select></label><button class="primary" type="submit">Save to timeline</button></form></section>
+</main><script src="app.js"></script></body></html>
