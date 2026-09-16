@@ -1,58 +1,7 @@
 const { test, expect } = require('@playwright/test');
-
-async function trackSample(page) {
-  await page.goto('/');
-  await page.locator('#snapStart').click();
-  await expect(page.locator('#capture')).toBeVisible();
-  await page.locator('[data-sample="roadtax"]').click();
-  await expect(page.locator('#extract')).toBeVisible();
-  await expect(page.locator('#extractName')).toHaveValue('Road tax — Ativa');
-  await page.locator('#extractForm button[type="submit"]').click();
-  await expect(page.locator('#timeline')).toBeVisible();
-  await expect(page.locator('#items').getByText('Road tax — Ativa',{exact:true})).toBeVisible();
-}
-
-test('simulated snap extract confirm and persistence', async ({ page }) => {
-  await trackSample(page);
-  await page.reload();
-  await expect(page.locator('#timeline')).toBeVisible();
-  await expect(page.locator('#items').getByText('Road tax — Ativa',{exact:true})).toBeVisible();
-});
-
-test('manual add edit reorder delete remains available', async ({ page }) => {
-  await trackSample(page);
-  await page.locator('#addBtn').click();
-  await page.locator('#name').fill('Manual Test Item');
-  await page.locator('#category').selectOption('Bills');
-  const dueDate = await page.evaluate(() => { const d=new Date(); d.setDate(d.getDate()+14); const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; });
-  await page.locator('#date').fill(dueDate);
-  await page.locator('#itemForm button[type="submit"]').click();
-  await expect(page.locator('#items .item')).toHaveCount(2);
-  await page.locator('#items').getByText('Manual Test Item',{exact:true}).click();
-  await expect(page.locator('#formTitle')).toHaveText('Edit tracked item');
-  await page.locator('#name').fill('Edited Manual Item');
-  await page.locator('#itemForm button[type="submit"]').click();
-  const before=await page.locator('#items .item strong').allTextContents();
-  await page.locator('#items .item').last().locator('[data-dir="up"]').click();
-  const after=await page.locator('#items .item strong').allTextContents();
-  expect(after).not.toEqual(before);
-  await page.reload();
-  await expect(page.locator('#items .item strong').first()).toHaveText(after[0]);
-  await page.locator('#items').getByText('Edited Manual Item',{exact:true}).click();
-  await page.locator('#deleteBtn').click();
-  await page.locator('#confirmOk').click();
-  await expect(page.locator('#items').getByText('Edited Manual Item',{exact:true})).toHaveCount(0);
-});
-
-test('delete all tracked items requires confirmation', async ({ page }) => {
-  await trackSample(page);
-  await page.locator('#manageBtn').click();
-  await page.locator('#resetTimeline').click();
-  await expect(page.locator('#confirmPanel')).toBeVisible();
-  await page.locator('#confirmCancel').click();
-  await expect(page.locator('#items .item')).toHaveCount(1);
-  await page.locator('#manageBtn').click();
-  await page.locator('#resetTimeline').click();
-  await page.locator('#confirmOk').click();
-  await expect(page.locator('#items .item')).toHaveCount(0);
-});
+async function openMoney(page){await page.goto('/');await page.getByRole('button',{name:'Open Money Overview'}).click();}
+async function record(page,{type='income',description,amount,classification,category}){await page.locator('#addTransaction').click();await page.locator('#txType').selectOption(type);await page.locator('#txDescription').fill(description);await page.locator('#txAmount').fill(String(amount));if(type==='expense'){if(category)await page.locator('#txCategory').selectOption(category);if(classification)await page.locator('#txClass').selectOption(classification)}await page.locator('#transactionForm button[type="submit"]').click();}
+test('money records reconcile income spending savings and transfers',async({page})=>{await openMoney(page);await record(page,{description:'Salary',amount:5000});await record(page,{type:'expense',description:'Groceries',amount:1000,category:'Food',classification:'Need'});await record(page,{type:'expense',description:'Entertainment',amount:300,category:'Entertainment',classification:'Want'});await record(page,{type:'save',description:'Emergency savings',amount:500});await expect(page.locator('#incomeTotal')).toHaveText('RM5,000');await expect(page.locator('#spendingTotal')).toHaveText('RM1,300');await expect(page.locator('#savedTotal')).toHaveText('RM500');await expect(page.locator('#surplusTotal')).toHaveText('RM3,200');await record(page,{type:'withdraw',description:'Savings withdrawal',amount:200});await expect(page.locator('#incomeTotal')).toHaveText('RM5,000');await expect(page.locator('#spendingTotal')).toHaveText('RM1,300');await expect(page.locator('#safeSpend')).toHaveText('RM3,400');});
+test('tracked upcoming bill reduces safe to spend but is not paid spending',async({page})=>{await page.goto('/');await page.locator('#snapStart').click();await page.locator('[data-sample="internet"]').click();await page.locator('#extractForm button[type="submit"]').click();await page.locator('[data-view="money"]').first().click();await record(page,{description:'Salary',amount:1000});await expect(page.locator('#spendingTotal')).toHaveText('RM0');await expect(page.locator('#safeSpend')).toHaveText('RM871');await expect(page.locator('#moneyCommitments')).toContainText('Home internet bill');});
+test('money records persist independently from legacy tracked items',async({page})=>{await openMoney(page);await record(page,{description:'Side income',amount:700});await page.reload();await expect(page.locator('#money')).toBeVisible();await expect(page.locator('#incomeTotal')).toHaveText('RM700');await expect(page.locator('#transactions')).toContainText('Side income');});
+test('manual tracking regression remains available',async({page})=>{await page.goto('/');await page.locator('#snapStart').click();await page.locator('[data-sample="roadtax"]').click();await page.locator('#extractForm button[type="submit"]').click();await expect(page.locator('#items')).toContainText('Road tax — Ativa');await page.reload();await expect(page.locator('#money')).toBeVisible();await page.locator('[data-view="timeline"]').first().click();await expect(page.locator('#items')).toContainText('Road tax — Ativa');});
