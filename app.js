@@ -22,6 +22,7 @@ function openConfirm(title,text,label,action){$('#confirmTitle').textContent=tit
 function closeConfirm(){$('#confirmPanel').classList.add('hidden');confirmAction=null}
 function beginCapture(){show('capture')}
 $('#snapStart').onclick=beginCapture;$('#snapAgain').onclick=beginCapture;$('#manualStart').onclick=()=>{clearForm();show('add')};
+$('#captureConcept').onclick=()=>openConfirm('Prototype simulation','Real camera/upload and AI extraction are not active yet. Use one of the sample documents below to test the intended workflow.','Got it',()=>{});
 $$('.sample').forEach(b=>b.onclick=()=>{const s=samples[b.dataset.sample];$('#extractName').value=s.name;$('#extractCategory').value=s.category;$('#extractDate').value=dateAfter(s.days);$('#extractAmount').value=s.amount||'';$('#extractReminder').value='30';$('#extractForm').dataset.sample=b.dataset.sample;show('extract')});
 $('#extractForm').onsubmit=e=>{e.preventDefault();const s=samples[e.currentTarget.dataset.sample]||{};items.push({id:uid(),icon:s.icon||'📌',name:$('#extractName').value.trim(),category:$('#extractCategory').value,date:$('#extractDate').value,amount:$('#extractAmount').value,repeat:s.repeat||'none',reminder:$('#extractReminder').value,source:'simulated-scan'});if(save())show('timeline')};
 $('#addBtn').onclick=()=>{clearForm();show('add')};$$('[data-view]').forEach(b=>b.onclick=()=>{if(b.dataset.view==='timeline'&&$('#add').classList.contains('active'))clearForm();show(b.dataset.view)});
