@@ -1,0 +1,27 @@
+(()=>{
+const BUDGET_KEY='mylife-monthly-budgets';
+const classes=['Need','Want','Commitment'];
+const $=s=>document.querySelector(s);
+function load(){try{return JSON.parse(localStorage.getItem(BUDGET_KEY))||{}}catch{return{}}}
+function save(v){localStorage.setItem(BUDGET_KEY,JSON.stringify(v))}
+function month(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function money(n){return 'RM'+Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:0,maximumFractionDigits:2})}
+function monthExpenses(){try{const tx=JSON.parse(localStorage.getItem('mylife-money-transactions'))||[];return tx.filter(x=>x.type==='expense'&&String(x.date||'').startsWith(month()))}catch{return[]}}
+function ensureUI(){
+ const moneyScreen=$('#money'); if(!moneyScreen||$('#budgetCard'))return;
+ const marker=[...moneyScreen.querySelectorAll('.section-title')].find(x=>x.textContent.includes('Where money went'));
+ const wrap=document.createElement('div');wrap.innerHTML=`<div class="section-title"><div><h2>Monthly Budget</h2><small class="muted">Plan limits and compare them with actual spending.</small></div><button id="editBudget" class="ghost">Set budget</button></div><div id="budgetCard" class="chart-card"></div>`;
+ marker?.before(...wrap.children);
+ const modal=document.createElement('div');modal.id='budgetPanel';modal.className='modal hidden';modal.innerHTML=`<div class="modal-card"><h2>Set monthly budget</h2><form id="budgetForm">${classes.map(c=>`<label>${c} budget (RM)<input id="budget${c}" type="number" min="0" step="0.01" required></label>`).join('')}<button class="primary" type="submit">Save budget</button><button id="cancelBudget" class="ghost wide" type="button">Cancel</button></form></div>`;document.body.appendChild(modal);
+ $('#editBudget').onclick=open;
+ $('#cancelBudget').onclick=()=>$('#budgetPanel').classList.add('hidden');
+ $('#budgetForm').onsubmit=e=>{e.preventDefault();const all=load();all[month()]={Need:+$('#budgetNeed').value,Want:+$('#budgetWant').value,Commitment:+$('#budgetCommitment').value};save(all);$('#budgetPanel').classList.add('hidden');render();};
+}
+function open(){const b=load()[month()]||{};classes.forEach(c=>$('#budget'+c).value=Number(b[c]||0));$('#budgetPanel').classList.remove('hidden')}
+function render(){ensureUI();const el=$('#budgetCard');if(!el)return;const b=load()[month()]||{},expenses=monthExpenses();const rows=classes.map(c=>{const planned=Number(b[c]||0),actual=expenses.filter(x=>x.classification===c).reduce((s,x)=>s+Number(x.amount||0),0),remaining=planned-actual,pct=planned?Math.min(100,actual/planned*100):(actual?100:0);return{c,planned,actual,remaining,pct}});const totalBudget=rows.reduce((s,r)=>s+r.planned,0),totalActual=rows.reduce((s,r)=>s+r.actual,0);if(!totalBudget){el.innerHTML='<div class="empty compact-empty">No monthly budget set yet. Set limits for Needs, Wants and Commitments.</div>';return}el.innerHTML=`<div class="budget-summary"><span><small>Total budget</small><strong>${money(totalBudget)}</strong></span><span><small>Actual spent</small><strong>${money(totalActual)}</strong></span><span><small>Remaining</small><strong>${money(totalBudget-totalActual)}</strong></span></div>`+rows.map(r=>`<div class="budget-row" data-budget-class="${r.c}"><div><strong>${r.c}</strong><small>${money(r.actual)} of ${money(r.planned)}</small></div><div class="progress"><span style="width:${r.pct}%"></span></div><b class="${r.remaining<0?'budget-over':''}">${r.remaining<0?'Over '+money(-r.remaining):money(r.remaining)+' left'}</b></div>`).join('');}
+const originalRender=window.render;
+function refresh(){render()}
+ensureUI();render();
+const observer=new MutationObserver(()=>{if($('#money')?.classList.contains('active'))render()});observer.observe(document.querySelector('.app'),{attributes:true,subtree:true,attributeFilter:['class']});
+window.addEventListener('storage',refresh);
+})();
